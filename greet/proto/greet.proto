@@ -1,0 +1,29 @@
+syntax = "proto3";
+package greet;
+option go_package = "greet/proto";
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloResponse);
+  rpc CreateUser (createrequest) returns (userResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string greeting = 1;
+}
+
+message createrequest {
+  int64 userid = 1;
+  string name = 2;
+  string address = 3;
+}
+message userResponse {
+  int64 userid = 1;
+  string name = 2;
+  string address = 3;
+  string message = 4;
+}
+
+// protoc -Igreet/proto --go_out=greet  --go_opt=module=greet --go-grpc_out=greet --go-grpc_opt=module=greet greet/proto/greet.proto
