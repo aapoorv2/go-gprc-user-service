@@ -23,7 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GreeterClient interface {
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error)
-	CreateUser(ctx context.Context, in *Createrequest, opts ...grpc.CallOption) (*UserResponse, error)
+	PostDetails(ctx context.Context, in *UserDetailsRequest, opts ...grpc.CallOption) (*UserDetailsResponse, error)
+	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
+	GetDetails(ctx context.Context, in *FetchUserDetailsRequest, opts ...grpc.CallOption) (*FetchUserDetailsResponse, error)
 }
 
 type greeterClient struct {
@@ -43,9 +45,27 @@ func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...
 	return out, nil
 }
 
-func (c *greeterClient) CreateUser(ctx context.Context, in *Createrequest, opts ...grpc.CallOption) (*UserResponse, error) {
-	out := new(UserResponse)
-	err := c.cc.Invoke(ctx, "/greet.Greeter/CreateUser", in, out, opts...)
+func (c *greeterClient) PostDetails(ctx context.Context, in *UserDetailsRequest, opts ...grpc.CallOption) (*UserDetailsResponse, error) {
+	out := new(UserDetailsResponse)
+	err := c.cc.Invoke(ctx, "/greet.Greeter/PostDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *greeterClient) RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error) {
+	out := new(RegisterUserResponse)
+	err := c.cc.Invoke(ctx, "/greet.Greeter/RegisterUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *greeterClient) GetDetails(ctx context.Context, in *FetchUserDetailsRequest, opts ...grpc.CallOption) (*FetchUserDetailsResponse, error) {
+	out := new(FetchUserDetailsResponse)
+	err := c.cc.Invoke(ctx, "/greet.Greeter/GetDetails", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +77,9 @@ func (c *greeterClient) CreateUser(ctx context.Context, in *Createrequest, opts 
 // for forward compatibility
 type GreeterServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloResponse, error)
-	CreateUser(context.Context, *Createrequest) (*UserResponse, error)
+	PostDetails(context.Context, *UserDetailsRequest) (*UserDetailsResponse, error)
+	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
+	GetDetails(context.Context, *FetchUserDetailsRequest) (*FetchUserDetailsResponse, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -68,8 +90,14 @@ type UnimplementedGreeterServer struct {
 func (UnimplementedGreeterServer) SayHello(context.Context, *HelloRequest) (*HelloResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 }
-func (UnimplementedGreeterServer) CreateUser(context.Context, *Createrequest) (*UserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
+func (UnimplementedGreeterServer) PostDetails(context.Context, *UserDetailsRequest) (*UserDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostDetails not implemented")
+}
+func (UnimplementedGreeterServer) RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterUser not implemented")
+}
+func (UnimplementedGreeterServer) GetDetails(context.Context, *FetchUserDetailsRequest) (*FetchUserDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDetails not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -102,20 +130,56 @@ func _Greeter_SayHello_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Createrequest)
+func _Greeter_PostDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserDetailsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).CreateUser(ctx, in)
+		return srv.(GreeterServer).PostDetails(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/greet.Greeter/CreateUser",
+		FullMethod: "/greet.Greeter/PostDetails",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).CreateUser(ctx, req.(*Createrequest))
+		return srv.(GreeterServer).PostDetails(ctx, req.(*UserDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Greeter_RegisterUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).RegisterUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/greet.Greeter/RegisterUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).RegisterUser(ctx, req.(*RegisterUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Greeter_GetDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchUserDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).GetDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/greet.Greeter/GetDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).GetDetails(ctx, req.(*FetchUserDetailsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,8 +196,16 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Greeter_SayHello_Handler,
 		},
 		{
-			MethodName: "CreateUser",
-			Handler:    _Greeter_CreateUser_Handler,
+			MethodName: "PostDetails",
+			Handler:    _Greeter_PostDetails_Handler,
+		},
+		{
+			MethodName: "RegisterUser",
+			Handler:    _Greeter_RegisterUser_Handler,
+		},
+		{
+			MethodName: "GetDetails",
+			Handler:    _Greeter_GetDetails_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

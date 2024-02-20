@@ -16,7 +16,9 @@ func main() {
 	}
 	c := pb.NewGreeterClient(connection)
 	// SayHello(c)
-	CreateUser(c)
+	// RegisterUser(c)
+	// PostDetails(c)
+	GetDetails(c)
 }
 
 func SayHello(c pb.GreeterClient){
@@ -28,12 +30,25 @@ func SayHello(c pb.GreeterClient){
 	}
 	fmt.Println(res.Greeting)
 }
-
-func CreateUser(c pb.GreeterClient) {
-	res, err := c.CreateUser(context.Background(), &pb.Createrequest{Userid : 2, Name: "abhi2", Address: "mumbai"})
+func RegisterUser(c pb.GreeterClient) {
+	res, err := c.RegisterUser(context.Background(), &pb.RegisterUserRequest{Username: "abhi", Password: "pass"})
 	if err != nil {
 		log.Fatalf("failed to connect")
 	}
-	fmt.Println(res.Userid, res.Name, res.Address)
+	fmt.Println(res.Token)
+}
+func PostDetails(c pb.GreeterClient) {
+	res, err := c.PostDetails(context.Background(), &pb.UserDetailsRequest{Name: "abhyudaya", Age: 22, Token: "4e9188bf-3d66-497b-8d20-dd22689b1e53"})
+	if err != nil {
+		log.Fatalf("failed to connect")
+	}
+	fmt.Println(res.Message)
+}
 
+func GetDetails(c pb.GreeterClient) {
+	res, err := c.GetDetails(context.Background(), &pb.FetchUserDetailsRequest{Token: "4e9188bf-3d66-497b-8d20-dd22689b1e53"})
+	if err != nil {
+		log.Fatalf("failed to connect")
+	}
+	fmt.Println(res)
 }
