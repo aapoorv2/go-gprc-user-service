@@ -8,10 +8,10 @@ import (
 	"net"
 
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	_ "github.com/lib/pq"
 )
 
 
@@ -36,6 +36,7 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)
 	}
+	log.Println("Server started running on port 9000")
 }
 
 func (s *Server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
