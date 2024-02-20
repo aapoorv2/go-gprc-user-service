@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	pb "greet/greet/proto"
 	"log"
 	"net"
 	"testing"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func TestSayHello(t *testing.T) {
@@ -72,6 +73,32 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestUserService_RegisterUser_Failure(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	// Expecting an error during user registration
+	mock.ExpectExec("INSERT INTO users").
+		WithArgs("existing_user", "password", sqlmock.AnyArg()).
+		WillReturnError(fmt.Errorf("username already exists"))
+
+	res, err := server.RegisterUser(context.Background(), &pb.RegisterUserRequest{
+		Username: "existing_user",
+		Password: "password",
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+
 func TestUserService_UpdatingUserDetails_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -94,6 +121,79 @@ func TestUserService_UpdatingUserDetails_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res.Message)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserService_UpdatingUserDetails_Failure(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	mock.ExpectExec("UPDATE users").
+		WithArgs("name", 20, "invalid_token").
+		WillReturnError(fmt.Errorf("Invalid Token"))
+
+	res, err := server.PostDetails(context.Background(), &pb.UserDetailsRequest{
+		Name:  "name",
+		Age:   20,
+		Token: "invalid_token",
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserService_FetchingUserDetails_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	mock.ExpectQuery("SELECT name, age FROM users").
+		WithArgs("valid_token").
+		WillReturnRows(sqlmock.NewRows([]string{"name", "age"}).AddRow("Test Name", 20))
+
+	res, err := server.GetDetails(context.Background(), &pb.FetchUserDetailsRequest{
+		Token: "valid_token",
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "Test Name", res.Name)
+	assert.Equal(t, int64(20), res.Age)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserService_FetchingUserDetails_Failure(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	mock.ExpectQuery("SELECT name, age FROM users").
+		WithArgs("invalid_token").
+		WillReturnError(fmt.Errorf("Invalid Token"))
+
+	res, err := server.GetDetails(context.Background(), &pb.FetchUserDetailsRequest{
+		Token: "invalid_token",
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
