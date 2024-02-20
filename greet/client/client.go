@@ -51,6 +51,19 @@ func main() {
 	})
 
 	r.PUT("/user", func(ctx *gin.Context) {
+		token := ctx.GetHeader("Authorization")
+		fmt.Println(token)
+		if token == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			return
+		}
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(token, bearerPrefix) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
+			return
+		}
+		token = strings.TrimPrefix(token, bearerPrefix)
+		
 		var user User
 		if err := ctx.ShouldBindJSON(&user); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -60,7 +73,7 @@ func main() {
 		res, err := c.PostDetails(ctx, &pb.UserDetailsRequest{
 			Name:  user.Name,
 			Age:   user.Age,
-			Token: user.Token,
+			Token: token,
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -104,4 +117,6 @@ func SayHello(c pb.GreeterClient) {
 	}
 	fmt.Println(res.Greeting)
 }
+
+
 
