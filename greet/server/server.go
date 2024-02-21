@@ -96,3 +96,22 @@ func (s *Server) GetDetails(c context.Context, req *pb.FetchUserDetailsRequest) 
 	log.Printf("User details fetched successfully")
 	return &pb.FetchUserDetailsResponse{Name: name, Age: age}, nil
 }
+
+func (s *Server) UpdateName(c context.Context, req *pb.UpdateNameRequest) (*pb.UpdateNameResponse, error) {
+	var existingToken string
+	err := s.db.QueryRow("SELECT token FROM users WHERE token = $1", req.Token).Scan(&existingToken)
+	if err == sql.ErrNoRows {
+		return nil, status.Error(codes.Unauthenticated, "Invalid Token")
+	}
+	token := req.Token
+	name := req.Name
+	_, err = s.db.Exec("UPDATE users SET name = $1 WHERE token = $2", name, token)
+
+	if err != nil {
+		log.Printf("Failed to update user details in PostgreSQL: %v", err)
+		return nil, status.Error(codes.Internal, "Failed to update user details")
+	}
+
+	log.Printf("User details updated successfully")
+	return &pb.UpdateNameResponse{Message: "Successfully updated the user's name"}, nil
+}

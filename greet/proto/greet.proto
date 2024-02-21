@@ -6,6 +6,7 @@ service Greeter {
   rpc PostDetails (userDetailsRequest) returns (userDetailsResponse);
   rpc RegisterUser (registerUserRequest) returns (registerUserResponse);
   rpc GetDetails (fetchUserDetailsRequest) returns (fetchUserDetailsResponse);
+  rpc UpdateName (updateNameRequest) returns (updateNameResponse);
 }
 
 message HelloRequest {
@@ -37,6 +38,13 @@ message fetchUserDetailsRequest {
 message fetchUserDetailsResponse {
   string name = 1;
   int64 age = 2;
+}
+message updateNameRequest {
+  string name = 1;
+  string token = 2;
+}
+message updateNameResponse {
+  string message = 1;
 }
 
 // protoc -Igreet/proto --go_out=greet  --go_opt=module=greet --go-grpc_out=greet --go-grpc_opt=module=greet greet/proto/greet.proto

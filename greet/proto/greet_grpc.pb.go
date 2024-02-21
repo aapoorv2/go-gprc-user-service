@@ -26,6 +26,7 @@ type GreeterClient interface {
 	PostDetails(ctx context.Context, in *UserDetailsRequest, opts ...grpc.CallOption) (*UserDetailsResponse, error)
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
 	GetDetails(ctx context.Context, in *FetchUserDetailsRequest, opts ...grpc.CallOption) (*FetchUserDetailsResponse, error)
+	UpdateName(ctx context.Context, in *UpdateNameRequest, opts ...grpc.CallOption) (*UpdateNameResponse, error)
 }
 
 type greeterClient struct {
@@ -72,6 +73,15 @@ func (c *greeterClient) GetDetails(ctx context.Context, in *FetchUserDetailsRequ
 	return out, nil
 }
 
+func (c *greeterClient) UpdateName(ctx context.Context, in *UpdateNameRequest, opts ...grpc.CallOption) (*UpdateNameResponse, error) {
+	out := new(UpdateNameResponse)
+	err := c.cc.Invoke(ctx, "/greet.Greeter/UpdateName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type GreeterServer interface {
 	PostDetails(context.Context, *UserDetailsRequest) (*UserDetailsResponse, error)
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
 	GetDetails(context.Context, *FetchUserDetailsRequest) (*FetchUserDetailsResponse, error)
+	UpdateName(context.Context, *UpdateNameRequest) (*UpdateNameResponse, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -98,6 +109,9 @@ func (UnimplementedGreeterServer) RegisterUser(context.Context, *RegisterUserReq
 }
 func (UnimplementedGreeterServer) GetDetails(context.Context, *FetchUserDetailsRequest) (*FetchUserDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDetails not implemented")
+}
+func (UnimplementedGreeterServer) UpdateName(context.Context, *UpdateNameRequest) (*UpdateNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateName not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -184,6 +198,24 @@ func _Greeter_GetDetails_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_UpdateName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).UpdateName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/greet.Greeter/UpdateName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).UpdateName(ctx, req.(*UpdateNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +238,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDetails",
 			Handler:    _Greeter_GetDetails_Handler,
+		},
+		{
+			MethodName: "UpdateName",
+			Handler:    _Greeter_UpdateName_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

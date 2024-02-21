@@ -63,7 +63,7 @@ func main() {
 			return
 		}
 		token = strings.TrimPrefix(token, bearerPrefix)
-		
+
 		var user User
 		if err := ctx.ShouldBindJSON(&user); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -103,6 +103,33 @@ func main() {
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{"username": res.Name, "age": res.Age})
+	})
+
+	r.PUT("/user/update", func(ctx *gin.Context)  {
+		token := ctx.GetHeader("Authorization")
+		fmt.Println(token)
+		if token == "" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			return
+		}
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(token, bearerPrefix) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
+			return
+		}
+		token = strings.TrimPrefix(token, bearerPrefix)
+
+		var user User
+		if err := ctx.ShouldBindJSON(&user); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		res, err := c.UpdateName(ctx, &pb.UpdateNameRequest{Name: user.Name, Token: token})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message": res.Message})
 	})
 
 	r.Run(":8080")

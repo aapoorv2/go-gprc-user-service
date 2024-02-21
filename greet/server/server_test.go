@@ -82,7 +82,6 @@ func TestUserService_RegisterUser_Failure(t *testing.T) {
 
 	server := Server{db: db}
 
-	// Expecting an error during user registration
 	mock.ExpectExec("INSERT INTO users").
 		WithArgs("existing_user", "password", sqlmock.AnyArg()).
 		WillReturnError(fmt.Errorf("username already exists"))
@@ -189,6 +188,55 @@ func TestUserService_FetchingUserDetails_Failure(t *testing.T) {
 		WillReturnError(fmt.Errorf("Invalid Token"))
 
 	res, err := server.GetDetails(context.Background(), &pb.FetchUserDetailsRequest{
+		Token: "invalid_token",
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserService_UpdatingName_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	mock.ExpectExec("UPDATE users").
+		WithArgs("name", "token").
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	res, err := server.UpdateName(context.Background(), &pb.UpdateNameRequest{
+		Name:  "name",
+		Token: "token",
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res.Message)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUserService_UpdatingName_Failure(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create mock: %v", err)
+	}
+	defer db.Close()
+
+	server := Server{db: db}
+
+	mock.ExpectExec("UPDATE users").
+		WithArgs("name", "invalid_token").
+		WillReturnError(fmt.Errorf("Invalid Token"))
+
+	res, err := server.UpdateName(context.Background(), &pb.UpdateNameRequest{
+		Name:  "name",
 		Token: "invalid_token",
 	})
 
